@@ -1,0 +1,4 @@
+(Seq 
+    (Atr "f" (Lam "x" (Som (Var "x") (Lit 10)))) 
+    (Atr "v" (Apl (Var "f") (Lit 5))) 
+)
