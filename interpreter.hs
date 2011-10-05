@@ -1,5 +1,6 @@
 type Id = String
 type Numero = Double
+
 data Termo = Var Id
           | Lit Numero
           | Som Termo Termo
@@ -10,9 +11,11 @@ data Termo = Var Id
 data Valor = Num Double
           | Fun (Valor -> StateTransformer Valor)
           | Erro
+
 type Estado = [(Id,Valor)]
 type Ambiente = [(Id,Valor)]
 data StateTransformer a = ST (Estado -> (a,Estado))
+
 instance Monad (StateTransformer) where
   return r = ST (\e -> (r,e))
   (ST m) >>= f = ST (\e -> let (v,e1) = m e
@@ -26,6 +29,7 @@ int a (Lit n) = return (Num n)
 int a (Som t u) = do { t1 <- int a t;
                        u1 <- int a u;
                        return (somaVal t1 u1); }
+
 int a (Lam i t) = return (Fun (\v -> int ((i,v):a) t))
 int a (Apl f t) = do { f1 <- int a f;
                        t1 <- int a t;
@@ -34,6 +38,7 @@ int a (Apl f t) = do { f1 <- int a f;
 int a (Atr i t) = ST (\e -> let (ST f) = int a t
                                 (v,ei) = f e
                             in (v,wr (i,v) ei))
+
 int a (Seq t u) = do { int a t; int a u; } 
 
 search i [] = Erro
