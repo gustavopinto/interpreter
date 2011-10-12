@@ -34,6 +34,7 @@ instance Monad (StateTransformer) where
                            in (n e1)
                     )
 
+int :: [(Id, Valor)] -> Termo -> StateTransformer Valor
 int a (Var i) = ST (\e -> (search i (a++e),e))
 int a (Lit n) = return (Num n)
 int a (Som t u) = do { t1 <- int a t;
@@ -48,8 +49,10 @@ int a (Apl f t) = do { f1 <- int a f;
 int a (Atr i t) = ST (\e -> let (ST f) = int a t
                                 (v,ei) = f e
                             in (v,wr (i,v) ei))
+
 int a (Seq t u) = do { int a t; int a u; } 
 
+search :: (Eq a) => a -> [(a, Valor)] -> Valor
 search i [] = Erro
 search i ((j,v):l) = if i == j then v else search i l
 
@@ -63,5 +66,5 @@ wr (i,v) [] = [(i,v)]
 wr (i,v) ((j,u):l) = if (i == j) then (j,v):l else [(j,u)] ++ (wr (i,v) l)
 
 prog1 = do {
-           (Seq (Atr "f" (Lam "x" (Som (Var "x") (Lit 10)))) (Atr "v" (Apl (Var "f") (Lit 5))))
+           int [] (Seq (Atr "f" (Lam "x" (Som (Var "x") (Lit 10)))) (Atr "v" (Apl (Var "f") (Lit 5))))
            }

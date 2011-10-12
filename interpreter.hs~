@@ -8,7 +8,7 @@ data Termo = Var Id
           | Apl Termo Termo
           | Atr Id Termo
           | Seq Termo Termo
-	   deriving Show
+	  deriving Show
 
 data Valor = Num Double
           | Fun (Valor -> StateTransformer Valor)
@@ -17,13 +17,12 @@ data Valor = Num Double
 type Estado = [(Id,Valor)]
 type Ambiente = [(Id,Valor)]
 
-data StateTransformer a = ST (Estado -> (a,Estado)) deriving Show
+data StateTransformer a = ST (Estado -> (a,Estado))
 
 instance Show (Valor) where
      show (Num a) = show a
      show (Fun f) = show (f (Num 0))
      show (Erro) = "erro"
-     show (Boolean b) = show b
 
 instance (Show a) => Show (StateTransformer a) where
      show (ST f) = show (f [])
