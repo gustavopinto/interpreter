@@ -1,6 +1,9 @@
-type Id = String
+type Id     = String
 type Numero = Double
 type Boolean = Bool
+
+data Point = Point Float Float deriving (Show)  
+data Shape = Circle Point Float | Rectangle Point Point deriving (Show)  
 
 data Termo = Var Id
           | Lit Numero
@@ -9,7 +12,9 @@ data Termo = Var Id
           | Apl Termo Termo
           | Atr Id Termo
           | Seq Termo Termo
-	  | While Bool Termo
+	  | While Boolean Termo
+	  | If Boolean Termo Termo
+	  | Else Termo
 	  deriving Show
 
 data Valor = Num Double
@@ -56,9 +61,11 @@ int a (Atr i t) = ST (\e -> let (ST f) = int a t
 
 int a (Seq t u) = do { int a t; int a u; } 
 
-int a (While b t) = if b then return (Boolean b) else return (Num 10)
+int a (While b t) = if b then int a (While b t) else do { int a t; }
 
-search :: (Eq a) => a -> [(a, Valor)] -> Valor
+int a (If b t1 (Else t2)) = if b then int a t1 else int a t2
+
+search :: (Eq i) => i -> [(i, Valor)] -> Valor
 search i [] = Erro
 search i ((j,v):l) = if i == j then v else search i l
 
@@ -91,6 +98,16 @@ prog4 = do {
            }
 
 prog5 = do {
-	   int [] (While True (Lit 11))
+	   int [] (Atr "x" (Lit 10));
+	   }
+
+progWhile = do {
+	   int [] (While (10 > 2) (Lit 11))
            }
+
+progIfElse = do {
+	   int [] (If (111 < 10) (Lit 100) (Else (Lit 10)))
+           }
+
+
 
