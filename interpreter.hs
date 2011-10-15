@@ -1,9 +1,7 @@
-type Id     = String
-type Numero = Double
+type Id      = String
+type Numero  = Double
 type Boolean = Bool
-
-data Point = Point Float Float deriving (Show)  
-data Shape = Circle Point Float | Rectangle Point Point deriving (Show)  
+type Param   = String
 
 data Termo = Var Id
           | Lit Numero
@@ -15,6 +13,8 @@ data Termo = Var Id
 	  | While Boolean Termo
 	  | If Boolean Termo Termo
 	  | Else Termo
+	  | F Id Id Termo
+	  | Param Id
 	  deriving Show
 
 data Valor = Num Double
@@ -46,6 +46,7 @@ instance Monad (StateTransformer) where
 int :: [(Id, Valor)] -> Termo -> StateTransformer Valor
 int a (Var i) = ST (\e -> (search i (a++e),e))
 int a (Lit n) = return (Num n)
+
 int a (Som t u) = do { t1 <- int a t;
                        u1 <- int a u;
                        return (somaVal t1 u1); }
@@ -60,10 +61,9 @@ int a (Atr i t) = ST (\e -> let (ST f) = int a t
                             in (v,wr (i,v) ei))
 
 int a (Seq t u) = do { int a t; int a u; } 
-
 int a (While b t) = if b then int a (While b t) else do { int a t; }
-
 int a (If b t1 (Else t2)) = if b then int a t1 else int a t2
+int a (F i p t) = int a t
 
 search :: (Eq i) => i -> [(i, Valor)] -> Valor
 search i [] = Erro
@@ -109,5 +109,8 @@ progIfElse = do {
 	   int [] (If (111 < 10) (Lit 100) (Else (Lit 10)))
            }
 
+progFun = do {
+	 -- int [] (F "soma" "x" (Som (Param "x") (Lit 1)));
 
-
+	  int [] (Apl (F "soma" "x" (Som (Param "x") (Lit 1))) (Lit 10))
+	  }
