@@ -14,7 +14,7 @@ data Termo = Var Id
 	  | If Boolean Termo Termo
 	  | Else Termo
 	  | F Id Id Termo
-	  | Param Id
+	  | Param Numero
 	  deriving Show
 
 data Valor = Num Double
@@ -46,6 +46,8 @@ instance Monad (StateTransformer) where
 int :: [(Id, Valor)] -> Termo -> StateTransformer Valor
 int a (Var i) = ST (\e -> (search i (a++e),e))
 int a (Lit n) = return (Num n)
+
+int a (Param n) = return (Num n)
 
 int a (Som t u) = do { t1 <- int a t;
                        u1 <- int a u;
@@ -110,7 +112,9 @@ progIfElse = do {
            }
 
 progFun = do {
-	 -- int [] (F "soma" "x" (Som (Param "x") (Lit 1)));
+	 -- atual
+	 int [] (F "soma" "x" (Som (Param 1) (Lit 10)));
 
-	  int [] (Apl (F "soma" "x" (Som (Param "x") (Lit 1))) (Lit 10))
+          -- ideal
+	  --int [] (Apl (F "soma" "x" (Som (Param "x") (Lit 1))) (Lit 10))
 	  }
