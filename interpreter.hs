@@ -5,6 +5,7 @@ type Param   = String
 
 data Termo = Var Id
           | Lit Numero
+	  | Boo Boolean
           | Som Termo Termo
           | Lam Id Termo
           | Apl Termo Termo
@@ -15,12 +16,18 @@ data Termo = Var Id
 	  | Else Termo
 	  | F Id Id Termo
 	  | Param Numero
+	  | E Termo Termo -- Expressões
+	  | Ou Termo Termo
+	  | Not Termo Termo
+	  | Igu Termo Termo
 	  deriving Show
 
 data Valor = Num Double
           | Fun (Valor -> StateTransformer Valor)
           | Boolean Bool
           | Erro
+	  | Nada
+
 
 type Estado = [(Id,Valor)]
 type Ambiente = [(Id,Valor)]
@@ -46,7 +53,7 @@ instance Monad (StateTransformer) where
 int :: [(Id, Valor)] -> Termo -> StateTransformer Valor
 int a (Var i) = ST (\e -> (search i (a++e),e))
 int a (Lit n) = return (Num n)
-
+int a (Boo b) = return (Boolean b)
 int a (Param n) = return (Num n)
 
 int a (Som t u) = do { t1 <- int a t;
@@ -63,9 +70,19 @@ int a (Atr i t) = ST (\e -> let (ST f) = int a t
                             in (v,wr (i,v) ei))
 
 int a (Seq t u) = do { int a t; int a u; } 
-int a (While b t) = if b then int a (While b t) else do { int a t; }
+-- WHILE
+int a (While b t) = do { bool <- int a (Boo b);
+			if analizar bool then int a (While b t)  else return Nada }
+
+--int a (Igu t1 t2) = do { bool1 <- int a (Boo t1);
+--  		         bool2 <- int a (Boo t2);
+--		         if ((analizar bool1) == (analizar bool2)) then int a (Boo True) else int a (Boo False)}
+
 int a (If b t1 (Else t2)) = if b then int a t1 else int a t2
 int a (F i p t) = int a t
+
+analizar :: Valor -> Bool
+analizar (Boolean b) = b
 
 search :: (Eq i) => i -> [(i, Valor)] -> Valor
 search i [] = Erro
@@ -104,7 +121,8 @@ prog5 = do {
 	   }
 
 progWhile = do {
-	   int [] (While (10 > 2) (Lit 11))
+	   int [] (While (True) (Som (Lit 1) (Lit 2)))
+	   --int [] (Seq (Atr "x" (Lit 10)) (While (Igu (Var "x") (Lit 10)) (Atr "x" (Lit 9))) )
            }
 
 progIfElse = do {
